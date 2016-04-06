@@ -8,11 +8,21 @@ BASE_URL = "http://baraholka.onliner.by"
 BOOK_FORUM = "viewforum.php?f=203"
 
 START_URL = BASE_URL + '/' + BOOK_FORUM
+PAGE_NUMBER_URL = START_URL + "&sk=created&start={}"
+PAGE_2_URL = START_URL + "&sk=created&start=50"
+
+# Here for simplicity sake only 20 pages are being parsed.
+# The better way is to obtain pagination widget and count the number
+# of total post pages.
+PAGES_URLS = [
+    PAGE_NUMBER_URL.format(x * 50) for x in range(2, 20)
+]
 
 
 class BookSpider(scrapy.Spider):
     name = "speechspider"
     start_urls = [START_URL]
+    start_urls.extend(PAGES_URLS)
 
     def parse(self, response):
         topic_url_selector = "h2.wraptxt a::attr('href')"
