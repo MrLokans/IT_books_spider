@@ -22,22 +22,20 @@ PAGES_URLS = [
 ]
 
 
+def correct_encoding(s):
+    if hasattr(s, "encode"):
+        return s.encode('utf-8').decode('utf-8')
+
+
 class BookSpider(CrawlSpider):
     name = "onlinerbooksspider"
+    allowed_domains = ["baraholka.onliner.by"]
     start_urls = [START_URL]
     start_urls.extend(PAGES_URLS)
 
-    # rules = [Rule(
-    #     LinkExtractor(restrict_css="h2.wraptxt a::attr('href')"),
-    #     callback='parse_topic_page')]
-
-    def parse(self, response):
-        topic_url_selector = "h2.wraptxt a::attr('href')"
-        # first_page = NEWS_URL + 'page/1'
-
-        for page_url in response.css(topic_url_selector).extract():
-            yield scrapy.Request(response.urljoin(page_url),
-                                 self.parse_topic_page)
+    rules = [Rule(
+        LinkExtractor(restrict_css="h2.wraptxt"),
+        callback='parse_topic_page', follow=True)]
 
     def parse_topic_page(self, response):
         header_title_selector = "h1.m-title-i.title::attr('title')"
@@ -46,9 +44,9 @@ class BookSpider(CrawlSpider):
         img_selector = "img.msgpost-img::attr('src')"
 
         post = PostItem()
-        post["title"] = response.css(header_title_selector).extract()
-        post["author"] = response.css(author_nickname_selector).extract()
-        post["content"] = response.css(content_selector).extract()
+        post["title"] = [correct_encoding(s) for s in response.css(header_title_selector).extract()]
+        post["author"] = [correct_encoding(s) for s in response.css(author_nickname_selector).extract()]
+        post["content"] = [correct_encoding(s) for s in response.css(content_selector).extract()]
         post["images"] = []
         for img in response.css(img_selector).extract():
             post["images"].append(img)
