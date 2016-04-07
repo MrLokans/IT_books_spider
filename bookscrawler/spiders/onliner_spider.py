@@ -16,7 +16,7 @@ PAGE_2_URL = START_URL + "&sk=created&start=50"
 # Here for simplicity sake only 20 pages are being parsed.
 # The better way is to obtain pagination widget and count the number
 # of total post pages.
-PAGES_COUNT = 5
+PAGES_COUNT = 40
 PAGES_URLS = [
     PAGE_NUMBER_URL.format(x * 50) for x in range(2, PAGES_COUNT)
 ]
