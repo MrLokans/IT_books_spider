@@ -16,7 +16,7 @@ PAGE_2_URL = START_URL + "&sk=created&start=50"
 # Here for simplicity sake only 20 pages are being parsed.
 # The better way is to obtain pagination widget and count the number
 # of total post pages.
-PAGES_COUNT = 40
+PAGES_COUNT = 2
 PAGES_URLS = [
     PAGE_NUMBER_URL.format(x * 50) for x in range(2, PAGES_COUNT)
 ]
@@ -40,13 +40,13 @@ class BookSpider(CrawlSpider):
     def parse_topic_page(self, response):
         header_title_selector = "h1.m-title-i.title::attr('title')"
         author_nickname_selector = ".mtauthor-nickname a._name::attr('title')"
-        content_selector = "div.content"
+        content_selector = "//div[@class='content']/p/text()"
         img_selector = "img.msgpost-img::attr('src')"
 
         post = PostItem()
-        post["title"] = [correct_encoding(s) for s in response.css(header_title_selector).extract()]
-        post["author"] = [correct_encoding(s) for s in response.css(author_nickname_selector).extract()]
-        post["content"] = [correct_encoding(s) for s in response.css(content_selector).extract()]
+        post["title"] = response.css(header_title_selector).extract_first()
+        post["author"] = response.css(author_nickname_selector).extract_first()
+        post["content"] = response.xpath(content_selector).extract()
         post["images"] = []
         for img in response.css(img_selector).extract():
             post["images"].append(img)
