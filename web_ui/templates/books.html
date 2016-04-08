@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+    {{ pagination.links }}
 
     {% for book in book_posts %}
         <div class="row">
@@ -13,14 +14,13 @@
                     {{ book.content | join('\n') | safe}}
 
                     {% for image_url in book.images %}
-                        <!-- <img src="{{ image_url }}" alt=""> -->
+                        <img class="responsive" src="{{ image_url }}" alt="">
                     {% endfor %}
                 </div>
                 
             </div>
         </div>
+        <hr>
     {% endfor %}
 
-    {{ pagination.info }}
-    {{ pagination.links }}
 {% endblock %}
