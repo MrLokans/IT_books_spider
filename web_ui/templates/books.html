@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    {% for book in book_posts %}
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 post-wrapper">
+                <div class="post-header">
+                    <strong>Author:</strong>{{ book.author }}
+                    <strong>Title:</strong>{{ book.title }}
+                </div>
+                <div class="post-content">
+                    {{ book.content | join('\n') | safe}}
+
+                    {% for image_url in book.images %}
+                        <!-- <img src="{{ image_url }}" alt=""> -->
+                    {% endfor %}
+                </div>
+                
+            </div>
+        </div>
+    {% endfor %}
+
+    {{ pagination.info }}
+    {{ pagination.links }}
+{% endblock %}

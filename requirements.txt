@@ -5,6 +5,7 @@ cssselect==0.9.1
 enum34==1.1.2
 Flask==0.10.1
 flask-paginate==0.4.1
+Flask-PyMongo==0.4.1
 idna==2.1
 ipaddress==1.0.16
 itsdangerous==0.24
