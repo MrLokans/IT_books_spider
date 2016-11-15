@@ -53,8 +53,5 @@ class BookSpider(CrawlSpider):
         post["title"] = response.css(header_title_selector).extract_first()
         post["author"] = response.css(author_nickname_selector).extract_first()
         post["content"] = response.xpath(content_selector).extract()
-        post["images"] = []
-        for img in response.css(img_selector).extract():
-            post["images"].append(img)
-
+        post["images"] = [i for i in response.css(img_selector).extract()]
         yield post
