@@ -12,3 +12,4 @@ class PostItem(Item):
     price = Field()
     buy_or_sell = Field()
     images = Field()
+    url = Field()

@@ -1,7 +1,5 @@
 from urllib.parse import urljoin
 
-import scrapy
-
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 # from scrapy.selector import Selector
@@ -21,7 +19,7 @@ PAGE_2_URL = START_URL + "&sk=created&start=50"
 
 POSTS_PER_PAGE = 90
 
-PAGES_COUNT = 40
+PAGES_COUNT = 90
 PAGES_URLS = [
     PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE)
     for x in range(2, PAGES_COUNT)
@@ -50,8 +48,12 @@ class BookSpider(CrawlSpider):
         img_selector = "img.msgpost-img::attr('src')"
 
         post = PostItem()
+        post['url'] = response.url
         post["title"] = response.css(header_title_selector).extract_first()
         post["author"] = response.css(author_nickname_selector).extract_first()
-        post["content"] = response.xpath(content_selector).extract()
+        content = response.xpath(content_selector).extract()
+        if isinstance(content, list):
+            content = "".join(p.strip("\r\n") for p in content)
+        post["content"] = content
         post["images"] = [i for i in response.css(img_selector).extract()]
         yield post
