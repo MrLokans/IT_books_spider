@@ -3,6 +3,7 @@
 
 import json
 import io
+import re
 
 import pymongo
 
@@ -44,9 +45,40 @@ class JsonWithEncodingPipeline(object):
         self.file = io.open('scraped_data_utf8.json', 'w', encoding='utf-8')
 
     def process_item(self, item, spider):
+        if item is None:
+            return
         line = json.dumps(dict(item), ensure_ascii=False) + "\n"
         self.file.write(line)
         return item
 
     def spider_closed(self, spider):
         self.file.close()
+
+
+class BookFilterPipeline(object):
+
+    def __init__(self):
+        # Words that are filtered for
+        self.searched_keywords = ['python', 'javascript',
+                                  'программировани[еюя]', 'arduino',
+                                  'c\+\+', 'нейронные сети',
+                                  'neural networks', 'machine learning',
+                                  'машинное обучение', 'data science',
+                                  'программировать', 'program', 'programming',
+                                  'искусственный интеллект',
+                                  'artificial intelligence',
+                                  'linux', 'статистика', 'селин', 'хеллер',
+                                  'стоккоу', 'гийота', 'git', 'devops',
+                                  'компьютерные сети', 'networks',
+                                  'angular(?:js)', 'react', 'схемотехника']
+        self.search_regex = re.compile(r"|".join(self.searched_keywords),
+                                       re.IGNORECASE)
+
+    def appropriate_text(self, text):
+        return self.search_regex.search(text)
+
+    def process_item(self, item, spider):
+        title_match = self.appropriate_text(item['title'])
+        content_match = self.appropriate_text(item['content'])
+        if title_match is not None or content_match is not None:
+            return item
