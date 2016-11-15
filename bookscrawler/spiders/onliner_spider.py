@@ -1,15 +1,17 @@
+from urllib.parse import urljoin
+
 import scrapy
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 # from scrapy.selector import Selector
 
-from items import PostItem
+from bookscrawler.items import PostItem
 
 BASE_URL = "http://baraholka.onliner.by"
 BOOK_FORUM = "viewforum.php?f=203"
 
-START_URL = BASE_URL + '/' + BOOK_FORUM
+START_URL = urljoin(BASE_URL, BOOK_FORUM)
 PAGE_NUMBER_URL = START_URL + "&sk=created&start={}"
 PAGE_2_URL = START_URL + "&sk=created&start=50"
 
@@ -21,7 +23,8 @@ POSTS_PER_PAGE = 90
 
 PAGES_COUNT = 40
 PAGES_URLS = [
-    PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE) for x in range(2, PAGES_COUNT)
+    PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE)
+    for x in range(2, PAGES_COUNT)
 ]
 
 
