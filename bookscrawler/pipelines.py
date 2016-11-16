@@ -82,3 +82,25 @@ class BookFilterPipeline(object):
         content_match = self.appropriate_text(item['content'])
         if title_match is not None or content_match is not None:
             return item
+
+
+class ReportPipeline(object):
+
+    def __init__(self):
+        self.cache_file = 'reported-links.pickle'
+        self.visited_links
+
+    def is_link_already_visited(self, url):
+        return False
+
+    def get_cache(self, cache_file):
+        return {}
+
+    def dump_cache(self, visited_links, cache_file):
+        pass
+
+    def generate_pdf_report(self, items):
+        pass
+
+    def report(self, rerporter_cls, *args, **kwargs):
+        pass
