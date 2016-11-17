@@ -4,7 +4,7 @@ SPIDER_MODULES = ['bookscrawler.spiders']
 NEWSPIDER_MODULE = 'bookscrawler.spiders'
 
 ITEM_PIPELINES = {'bookscrawler.pipelines.BookFilterPipeline': 100,
-                  'bookscrawler.pipelines.JsonWithEncodingPipeline': 150,
+                  'bookscrawler.pipelines.ReportPipeline': 150,
                   }
 
 LOG_LEVEL = 'INFO'

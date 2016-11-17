@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Book report for {{ report_date }}</title>
+</head>
+<body>
+    <h2>Latest books: </h2>
+        <ul>
+        {% for url, item in books_table.items() %}
+            <li><a href="{{ url }}">{{ item['title'] }}</a></li>
+        {% endfor %}
+        </ul>
+</body>
+</html>

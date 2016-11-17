@@ -13,6 +13,10 @@ from scrapy.exceptions import DropItem
 from scrapy import log
 from scrapy.conf import settings
 
+import pandas as pd
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML
+
 
 class MongoDBPipeline(object):
 
@@ -72,7 +76,8 @@ class BookFilterPipeline(object):
                                   'linux', 'статистика', 'селин', 'хеллер',
                                   'стоккоу', 'гийота', 'git', 'devops',
                                   'компьютерные сети', 'networks',
-                                  'angular(?:js)', 'react', 'схемотехника']
+                                  'angular(?:js)', 'react', 'схемотехника',
+                                  ]
         self.search_regex = re.compile(r"|".join(self.searched_keywords),
                                        re.IGNORECASE)
 
@@ -89,16 +94,25 @@ class BookFilterPipeline(object):
 class ReportPipeline(object):
     MINIMUM_REPORTED_URLS = 5
     URL_CACHE_FILE = 'reported-links.pickle'
+    TEMPLATE_NAME = 'report.html'
 
     def __init__(self):
         self.reported_links = {}
+        self.env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
 
-    def spider_opened(self):
+    def open_spider(self, spider):
         self.reported_links = self.read_url_cache(self.URL_CACHE_FILE)
 
-    def spider_closed(self, spider):
+    def close_spider(self, spider):
         if len(self.reported_links) >= self.MINIMUM_REPORTED_URLS:
             self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
+            self.generate_pdf_report(self.reported_links, 'results.pdf')
+
+    def _get_template(self):
+        """
+        Reads jinja2 template from file
+        """
+        return self.env.get_template(self.TEMPLATE_NAME)
 
     def process_item(self, item, spider):
         if item is None:
@@ -131,12 +145,31 @@ class ReportPipeline(object):
         with open(cache_file, 'wb') as f_out:
             pickle.dump(reported_links, f_out)
 
-    def generate_pdf_report(self, items):
+    def generate_table_html(self, items: dict,
+                            columns: tuple=('url', 'title')) -> str:
+        """
+        Generates HTML table for the given dictionary item
+
+        :param items: dictionary where the ky is the post URL
+        and the value is the corresponding post dictionary
+        """
+        item_list = [v for _, v in items.items()]
+        df = pd.DataFrame(data=item_list, columns=columns)
+        return df.to_html()
+
+    def generate_pdf_report(self, items: dict,
+                            output_file: str) -> None:
         """
         Generate PDF report from the given list
         of items
         """
-        pass
+        template_context = {
+            'report_date': 'today',
+            'books_table': items
+        }
+        template = self._get_template()
+        result_html = template.render(template_context)
+        HTML(string=result_html).write_pdf(output_file)
 
     def report(self, rerporter_cls, *args, **kwargs):
         """
