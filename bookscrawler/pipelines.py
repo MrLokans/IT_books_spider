@@ -3,7 +3,9 @@
 
 import json
 import io
+import pickle
 import re
+import os
 
 import pymongo
 
@@ -85,19 +87,37 @@ class BookFilterPipeline(object):
 
 
 class ReportPipeline(object):
+    MINIMUM_REPORTED_URLS = 5
+    URL_CACHE_FILE = 'reported-links.pickle'
 
     def __init__(self):
-        self.cache_file = 'reported-links.pickle'
-        self.visited_links
+        self.reported_links = {}
 
-    def is_link_already_visited(self, url):
-        return False
+    def spider_opened(self):
+        self.reported_links = self.read_url_cache(self.URL_CACHE_FILE)
 
-    def get_cache(self, cache_file):
-        return {}
+    def spider_closed(self, spider):
+        if len(self.reported_links) >= self.MINIMUM_REPORTED_URLS:
+            self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
 
-    def dump_cache(self, visited_links, cache_file):
-        pass
+    def is_link_already_reported(self, url):
+        """Checks if item with the given
+        URL has already been reported"""
+        return url in self.reported_links
+
+    def read_url_cache(self, cache_file: str) -> dict:
+        """
+        Attempts to read pickled URL cache
+        """
+        if not os.path.exists(cache_file) or not os.path.isfile(cache_file):
+            return {}
+        with open(cache_file, 'rb') as f:
+            return pickle.load(f)
+
+    def dump_cache(self, reported_links: dict,
+                   cache_file: str) -> None:
+        with open(cache_file, 'wb') as f_out:
+            pickle.dump(reported_links, f_out)
 
     def generate_pdf_report(self, items):
         pass
