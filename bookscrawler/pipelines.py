@@ -100,9 +100,18 @@ class ReportPipeline(object):
         if len(self.reported_links) >= self.MINIMUM_REPORTED_URLS:
             self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
 
+    def process_item(self, item, spider):
+        if item is None:
+            return None
+        if not self.is_link_already_reported(item['url']):
+            self.reported_links[item['url']] = item
+        return item
+
     def is_link_already_reported(self, url):
-        """Checks if item with the given
-        URL has already been reported"""
+        """
+        Checks if item with the given
+        URL has already been reported
+        """
         return url in self.reported_links
 
     def read_url_cache(self, cache_file: str) -> dict:
@@ -116,11 +125,22 @@ class ReportPipeline(object):
 
     def dump_cache(self, reported_links: dict,
                    cache_file: str) -> None:
+        """
+        Serialize visited links and persist
+        """
         with open(cache_file, 'wb') as f_out:
             pickle.dump(reported_links, f_out)
 
     def generate_pdf_report(self, items):
+        """
+        Generate PDF report from the given list
+        of items
+        """
         pass
 
     def report(self, rerporter_cls, *args, **kwargs):
+        """
+        Sends the given PDF report via the given
+        reporter class
+        """
         pass
