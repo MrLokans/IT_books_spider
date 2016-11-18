@@ -1,6 +1,7 @@
 # Thanks to 'reclosedev' answer on
 # https://stackoverflow.com/questions/9181214/scrapy-text-encoding
 
+import datetime
 import json
 import io
 import pickle
@@ -106,7 +107,8 @@ class ReportPipeline(object):
     def close_spider(self, spider):
         if len(self.reported_links) >= self.MINIMUM_REPORTED_URLS:
             self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
-            self.generate_pdf_report(self.reported_links, 'results.pdf')
+            report_name = self.generate_report_name(report_type='pdf')
+            self.generate_pdf_report(self.reported_links, report_name)
 
     def _get_template(self):
         """
@@ -145,6 +147,19 @@ class ReportPipeline(object):
         with open(cache_file, 'wb') as f_out:
             pickle.dump(reported_links, f_out)
 
+    @staticmethod
+    def generate_report_name(now: datetime.datetime=None,
+                             report_type: str='pdf',
+                             date_format="%Y-%m-%d_%H-%M") -> str:
+        """
+        Generates report name based on the current date
+        """
+        if now is None:
+            now = datetime.datetime.utcnow()
+        formatted_date = now.strftime(date_format)
+
+        return 'Books_report_for_{}.{}'.format(formatted_date, report_type)
+
     def generate_table_html(self, items: dict,
                             columns: tuple=('url', 'title')) -> str:
         """
@@ -158,7 +173,7 @@ class ReportPipeline(object):
         return df.to_html()
 
     def generate_pdf_report(self, items: dict,
-                            output_file: str) -> None:
+                            output_file: str) -> str:
         """
         Generate PDF report from the given list
         of items
@@ -170,6 +185,7 @@ class ReportPipeline(object):
         template = self._get_template()
         result_html = template.render(template_context)
         HTML(string=result_html).write_pdf(output_file)
+        return output_file
 
     def report(self, rerporter_cls, *args, **kwargs):
         """
