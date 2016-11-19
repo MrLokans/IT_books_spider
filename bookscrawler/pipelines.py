@@ -6,6 +6,7 @@ import json
 import io
 import pickle
 import re
+import mailer
 import os
 
 import pymongo
@@ -17,6 +18,46 @@ from scrapy.conf import settings
 import pandas as pd
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
+
+
+class MailSender(object):
+    """
+    Incapsulates mail sending logics
+    """
+
+    def __init__(self, smtphost='localhost', mailfrom='',
+                 smtpuser='', smtppass="", smtport=25,
+                 smtptls=False, smtpssl=False):
+        self.host = smtphost
+        self.mailfrom = mailfrom
+        self.user = smtpuser
+        self.password = smtppass
+        self.port = smtport
+        self.use_tls = smtptls
+        self.use_ssl = smtpssl
+
+    def send(self, to=(), subject="",
+             body="", attachs=(), mime='text/plain'):
+        message = mailer.Message(From=self.mailfrom,
+                                 To=to,
+                                 Subject=body)
+        message.Body = body
+
+        sender = mailer.Mailer(self.host, port=self.port, use_tls=self.use_tls,
+                               use_ssl=self.use_ssl, usr=self.user,
+                               pwd=self.password)
+        for fname, mime_type, fp in attachs:
+            message.attach(fname)
+        sender.send(message)
+
+    @classmethod
+    def from_settings(cls, settings):
+        return cls(smtphost=settings['MAIL_HOST'],
+                   smtport=settings['MAIL_PORT'],
+                   mailfrom=settings['MAIL_FROM'],
+                   smtpuser=settings['MAIL_USER'],
+                   smtppass=settings['MAIL_PASS'],
+                   smtpssl=settings['MAIL_SSL'])
 
 
 class MongoDBPipeline(object):
@@ -100,6 +141,8 @@ class ReportPipeline(object):
     def __init__(self):
         self.reported_links = {}
         self.env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
+        self.mailer = MailSender.from_settings(settings)
+        self.send_to = os.environ['SCRAPY_SEND_MAIL_TO']
 
     def open_spider(self, spider):
         self.reported_links = self.read_url_cache(self.URL_CACHE_FILE)
@@ -109,6 +152,7 @@ class ReportPipeline(object):
             self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
             report_name = self.generate_report_name(report_type='pdf')
             self.generate_pdf_report(self.reported_links, report_name)
+            self.email_report(report_name)
 
     def _get_template(self):
         """
@@ -187,9 +231,12 @@ class ReportPipeline(object):
         HTML(string=result_html).write_pdf(output_file)
         return output_file
 
-    def report(self, rerporter_cls, *args, **kwargs):
+    def email_report(self, report_file: str):
         """
         Sends the given PDF report via the given
         reporter class
         """
-        pass
+        with open(report_file, 'rb') as f:
+            attach = (report_file, 'application/pdf', f)
+            self.mailer.send(to=[self.send_to], subject='Daily book report',
+                             body='', attachs=(attach, ))
