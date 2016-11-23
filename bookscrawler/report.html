@@ -3,12 +3,17 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Book report for {{ report_date }}</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h2>Latest books: </h2>
         <ul>
         {% for url, item in books_table.items() %}
-            <li><a href="{{ url }}">{{ item['title'] }}</a></li>
+            <div class='post'>
+                <a class='link' href="{{ url }}">{{ item['title'] }}</a>:
+                <br>
+                <strong class='author'>{{ item['author'] }}</strong><strong class='price'>{{ item['price'] if item['price'] != None else 0 }} р</strong>
+            </div>
         {% endfor %}
         </ul>
 </body>

@@ -1,0 +1,27 @@
+.price {
+    font-size: 12px;
+}
+
+.title {
+
+}
+
+.author {
+    font-size: 12px;
+    padding-right: 100px;
+}
+
+.post {
+    padding-bottom: 10px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #ABABAB;
+}
+
+.link {
+  font-size: 14px;
+  text-decoration:none;
+}
+
+li {
+    list-style-type: none;
+}
