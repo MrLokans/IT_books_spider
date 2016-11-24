@@ -19,7 +19,7 @@ PAGE_2_URL = START_URL + "&sk=created&start=50"
 
 POSTS_PER_PAGE = 90
 
-PAGES_COUNT = 90
+PAGES_COUNT = 140
 PAGES_URLS = [
     PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE)
     for x in range(2, PAGES_COUNT)
@@ -42,18 +42,37 @@ class BookSpider(CrawlSpider):
         callback='parse_topic_page', follow=True)]
 
     def parse_topic_page(self, response):
-        header_title_selector = "h1.m-title-i.title::attr('title')"
-        author_nickname_selector = ".mtauthor-nickname a._name::attr('title')"
-        content_selector = "//div[@class='content']/p/text()"
-        img_selector = "img.msgpost-img::attr('src')"
-
         post = PostItem()
         post['url'] = response.url
-        post["title"] = response.css(header_title_selector).extract_first()
-        post["author"] = response.css(author_nickname_selector).extract_first()
+        post["title"] = self.extract_title(response)
+        post["author"] = self.extract_author(response)
+        post['price'] = self.extract_price(response)
+        post["content"] = self.extract_content(response)
+        post["images"] = self.extract_images(response)
+        yield post
+
+    def extract_title(self, response):
+        header_title_selector = "h1.m-title-i.title::attr('title')"
+        return response.css(header_title_selector).extract_first()
+
+    def extract_author(self, response):
+        author_nickname_selector = ".mtauthor-nickname a._name::attr('title')"
+        return response.css(author_nickname_selector).extract_first()
+
+    def extract_price(self, response):
+        price_selector = "li.price-primary::text"
+        price = response.css(price_selector).extract_first()
+        if price is not None:
+            price = price.strip()
+        return price
+
+    def extract_content(self, response):
+        content_selector = "//div[@class='content']/p/text()"
         content = response.xpath(content_selector).extract()
         if isinstance(content, list):
             content = "".join(p.strip("\r\n") for p in content)
-        post["content"] = content
-        post["images"] = [i for i in response.css(img_selector).extract()]
-        yield post
+        return content
+
+    def extract_images(self, response):
+        img_selector = "img.msgpost-img::attr('src')"
+        return [i for i in response.css(img_selector).extract()]
