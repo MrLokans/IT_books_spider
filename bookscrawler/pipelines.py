@@ -19,6 +19,9 @@ import pandas as pd
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSS_PATH = os.path.join(BASE_DIR, 'style.css')
+
 
 class MailSender(object):
     """
@@ -40,7 +43,7 @@ class MailSender(object):
              body="", attachs=(), mime='text/plain'):
         message = mailer.Message(From=self.mailfrom,
                                  To=to,
-                                 Subject=body)
+                                 Subject=subject)
         message.Body = body
 
         sender = mailer.Mailer(self.host, port=self.port, use_tls=self.use_tls,
@@ -108,17 +111,19 @@ class BookFilterPipeline(object):
     def __init__(self):
         # Words that are filtered for
         self.searched_keywords = ['python', 'javascript',
-                                  'программировани[еюя]', 'arduino',
-                                  'c\+\+', 'нейронные сети',
+                                  'программировани[еюя]', 'программируем',
+                                  'программист', 'arduino',
+                                  'c\+\+', 'нейронные сети', 'разработка',
                                   'neural networks', 'machine learning',
                                   'машинное обучение', 'data science',
-                                  'программировать', 'program', 'programming',
+                                  'program', 'programming',
                                   'искусственный интеллект',
                                   'artificial intelligence',
                                   'linux', 'статистика', 'селин', 'хеллер',
-                                  'стоккоу', 'гийота', 'git', 'devops',
+                                  'стоккоу', 'гийота', 'git\s', 'devops',
                                   'компьютерные сети', 'networks',
                                   'angular(?:js)', 'react', 'схемотехника',
+                                  'алгоритм', 'algorithm', 'java'
                                   ]
         self.search_regex = re.compile(r"|".join(self.searched_keywords),
                                        re.IGNORECASE)
@@ -230,7 +235,8 @@ class ReportPipeline(object):
         }
         template = self._get_template()
         result_html = template.render(template_context)
-        HTML(string=result_html).write_pdf(output_file)
+        HTML(string=result_html).write_pdf(output_file,
+                                           stylesheets=[CSS_PATH])
         return output_file
 
     def email_report(self, report_file: str):

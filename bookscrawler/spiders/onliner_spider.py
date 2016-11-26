@@ -19,7 +19,7 @@ PAGE_2_URL = START_URL + "&sk=created&start=50"
 
 POSTS_PER_PAGE = 90
 
-PAGES_COUNT = 140
+PAGES_COUNT = 100
 PAGES_URLS = [
     PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE)
     for x in range(2, PAGES_COUNT)
@@ -49,7 +49,18 @@ class BookSpider(CrawlSpider):
         post['price'] = self.extract_price(response)
         post["content"] = self.extract_content(response)
         post["images"] = self.extract_images(response)
+        post["created"] = self.extract_created(response)
+        post["city"] = self.extract_city(response)
+        print(post)
         yield post
+
+    def extract_city(self, response):
+        city_selector = "strong.fast-desc-region::text"
+        return response.css(city_selector).extract_first().strip()
+
+    def extract_created(self, response):
+        created_selector = "//small[@class='msgpost-date']/span[1]//text()"
+        return response.xpath(created_selector).extract_first().strip()
 
     def extract_title(self, response):
         header_title_selector = "h1.m-title-i.title::attr('title')"
