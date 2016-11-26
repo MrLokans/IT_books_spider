@@ -127,9 +127,11 @@ class BookFilterPipeline(object):
         return self.search_regex.search(text)
 
     def process_item(self, item, spider):
-        title_match = self.appropriate_text(item['title'])
-        content_match = self.appropriate_text(item['content'])
-        if title_match is not None or content_match is not None:
+        whole_text = item['title'] + item['content']
+
+        match = self.appropriate_text(whole_text)
+        if match is not None:
+            item['tags'] = [match.group()]
             return item
 
 

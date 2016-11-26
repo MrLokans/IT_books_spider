@@ -12,7 +12,14 @@
             <div class='post'>
                 <a class='link' href="{{ url }}">{{ item['title'] }}</a>:
                 <br>
-                <strong class='author'>{{ item['author'] }}</strong><strong class='price'>{{ item['price'] if item['price'] != None else 0 }} р</strong>
+                <strong class='author'>{{ item['author'] }}</strong>
+                <strong class='price'>{{ item['price'] if item['price'] != None else 0 }} р</strong>
+
+                <div class="tags">
+                    {% for tag in item['tags'] %}
+                        <small class='tag'>#{{ tag }}</small>
+                    {% endfor %}
+                </div>
             </div>
         {% endfor %}
         </ul>
