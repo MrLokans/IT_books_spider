@@ -150,16 +150,16 @@ class ReportPipeline(object):
         self.env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
         self.mailer = MailSender.from_settings(settings)
         self.send_to = os.environ['SCRAPY_SEND_MAIL_TO']
+        self.to_be_reported = {}
 
     def open_spider(self, spider):
         self.reported_links = self.read_url_cache(self.URL_CACHE_FILE)
 
     def close_spider(self, spider):
-        if len(self.reported_links) >= self.MINIMUM_REPORTED_URLS:
-            self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
-            report_name = self.generate_report_name(report_type='pdf')
-            self.generate_pdf_report(self.reported_links, report_name)
-            self.email_report(report_name)
+        self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
+        report_name = self.generate_report_name(report_type='pdf')
+        self.generate_pdf_report(self.to_be_reported, report_name)
+        self.email_report(report_name)
 
     def _get_template(self):
         """
@@ -172,6 +172,7 @@ class ReportPipeline(object):
             return None
         if not self.is_link_already_reported(item['url']):
             self.reported_links[item['url']] = item
+            self.to_be_reported[item['url']] = item
         return item
 
     def is_link_already_reported(self, url):

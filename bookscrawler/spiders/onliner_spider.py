@@ -51,7 +51,6 @@ class BookSpider(CrawlSpider):
         post["images"] = self.extract_images(response)
         post["created"] = self.extract_created(response)
         post["city"] = self.extract_city(response)
-        print(post)
         yield post
 
     def extract_city(self, response):
