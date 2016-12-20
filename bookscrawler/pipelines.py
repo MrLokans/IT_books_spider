@@ -4,15 +4,15 @@
 import datetime
 import json
 import io
-import pickle
-import re
+import logging
 import mailer
 import os
+import pickle
+import re
 
 import pymongo
 
 from scrapy.exceptions import DropItem
-from scrapy import log
 from scrapy.conf import settings
 
 import pandas as pd
@@ -21,6 +21,9 @@ from weasyprint import HTML
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSS_PATH = os.path.join(BASE_DIR, 'style.css')
+
+
+logger = logging.getLogger()
 
 
 class MailSender(object):
@@ -85,8 +88,8 @@ class MongoDBPipeline(object):
                 raise DropItem("Item already present.")
             else:
                 self.collection.insert(dict(item))
-                log.msg("Question added to MongoDB database!",
-                        level=log.DEBUG, spider=spider)
+                logger.msg("Question added to MongoDB database!",
+                           level=logging.DEBUG, spider=spider)
         return item
 
 
@@ -136,6 +139,7 @@ class BookFilterPipeline(object):
 
         match = self.appropriate_text(whole_text)
         if match is not None:
+            logger.debug("Match found: {}".format(match.group()))
             item['tags'] = [match.group()]
             return item
 
@@ -147,7 +151,8 @@ class ReportPipeline(object):
 
     def __init__(self):
         self.reported_links = {}
-        self.env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
+        self._template_dir = self._get_template_dir()
+        self.env = Environment(loader=FileSystemLoader(self._template_dir))
         self.mailer = MailSender.from_settings(settings)
         self.send_to = os.environ['SCRAPY_SEND_MAIL_TO']
         self.to_be_reported = {}
@@ -160,6 +165,9 @@ class ReportPipeline(object):
         report_name = self.generate_report_name(report_type='pdf')
         self.generate_pdf_report(self.to_be_reported, report_name)
         self.email_report(report_name)
+
+    def _get_template_dir(self):
+        return os.path.dirname(__file__)
 
     def _get_template(self):
         """
@@ -209,8 +217,10 @@ class ReportPipeline(object):
         if now is None:
             now = datetime.datetime.utcnow()
         formatted_date = now.strftime(date_format)
-
-        return 'Books_report_for_{}.{}'.format(formatted_date, report_type)
+        report_name = 'Books_report_for_{}.{}'.format(formatted_date,
+                                                      report_type)
+        logger.info("Report name generated: {}.".format(report_name))
+        return report_name
 
     def generate_table_html(self, items: dict,
                             columns: tuple=('url', 'title')) -> str:
@@ -247,5 +257,6 @@ class ReportPipeline(object):
         """
         with open(report_file, 'rb') as f:
             attach = (report_file, 'application/pdf', f)
+            logger.info("Sending report to {}".format(self.send_to))
             self.mailer.send(to=[self.send_to], subject='Daily book report',
                              body='', attachs=(attach, ))
