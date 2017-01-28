@@ -3,15 +3,12 @@ import logging
 import ConfigParser
 
 from fabric.api import (
-    abort,
     cd,
-    local,
-    lcd,
-    put,
     run,
     settings,
-    sudo
+    sudo,
 )
+from fabric.contrib.files import upload_template
 from fabric.state import env
 
 logging.basicConfig(level=logging.INFO)
@@ -24,8 +21,11 @@ PROJECT_DIR = '/opt/IT_books_spider'
 VIRTUALENV_DIR = '/opt/it_books_venv'
 VIRTUALENV_PYTHON = os.path.join(VIRTUALENV_DIR, 'bin/python3')
 VIRTUALENV_PIP = os.path.join(VIRTUALENV_DIR, 'bin/pip')
+VIRTUALENV_ACTIVATE = os.path.join(VIRTUALENV_DIR, 'bin/activate')
 REQUIREMENTS_PATH = os.path.join(PROJECT_DIR, 'requirements.txt')
 CONFIG_FILE = os.path.abspath('config.ini')
+CRONTAB_TEMPLATE_NAME = 'crontab-template.sh'
+CRONTAB_FILE = os.path.join('/etc/cron.daily', 'it-spider')
 
 
 env.hosts = []
@@ -64,11 +64,29 @@ def install_dependencies():
 
 
 def add_crontab_entry():
+    logger.info("Reading config")
     config.read(CONFIG_FILE)
     username = config.get('credentials', 'email_username')
     password = config.get('credentials', 'email_password')
     recipient = config.get('credentials', 'recipient')
+
+    if not any([username, password, recipient]):
+        logger.error("Some of the settings is not set.")
+        raise ValueError("Some of the settings is not set.")
+
     logger.info("Creating crontab entry")
+    context = {
+        'password': password,
+        'username': username,
+        'recipient': recipient,
+        'spider_dir': PROJECT_DIR,
+        'venv_activate': VIRTUALENV_ACTIVATE
+    }
+    upload_template(CRONTAB_TEMPLATE_NAME, CRONTAB_FILE,
+                    context=context,
+                    use_sudo=True,
+                    use_jinja=True)
+    sudo('chmod +x {file}'.format(file=CRONTAB_FILE))
 
 
 def deploy():
@@ -76,4 +94,4 @@ def deploy():
     checkout_repository()
     create_virtualenv()
     install_dependencies()
-    # add_crontab_entry()
+    add_crontab_entry()
