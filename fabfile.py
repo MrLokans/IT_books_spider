@@ -85,7 +85,8 @@ def add_crontab_entry():
     upload_template(CRONTAB_TEMPLATE_NAME, CRONTAB_FILE,
                     context=context,
                     use_sudo=True,
-                    use_jinja=True)
+                    use_jinja=True,
+                    backup=False)
     sudo('chmod +x {file}'.format(file=CRONTAB_FILE))
 
 
