@@ -258,5 +258,6 @@ class ReportPipeline(object):
         with open(report_file, 'rb') as f:
             attach = (report_file, 'application/pdf', f)
             logger.info("Sending report to {}".format(self.send_to))
-            self.mailer.send(to=[self.send_to], subject='Daily book report',
+            self.mailer.send(to=[self.send_to],
+                             subject='[it-book-spider] Daily book report',
                              body='', attachs=(attach, ))
