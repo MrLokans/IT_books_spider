@@ -58,11 +58,16 @@ class MailSender(object):
 
     @classmethod
     def from_settings(cls, settings):
+        user = settings['MAIL_USER']
+        password = settings['MAIL_PASS']
+        recipient = settings['MAIL_FROM']
+        if not any([user, password, recipient]):
+            raise ValueError("Mail credentials missing.")
         return cls(smtphost=settings['MAIL_HOST'],
                    smtport=settings['MAIL_PORT'],
-                   mailfrom=settings['MAIL_FROM'],
-                   smtpuser=settings['MAIL_USER'],
-                   smtppass=settings['MAIL_PASS'],
+                   mailfrom=recipient,
+                   smtpuser=user,
+                   smtppass=password,
                    smtpssl=settings['MAIL_SSL'])
 
 

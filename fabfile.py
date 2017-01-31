@@ -11,6 +11,8 @@ from fabric.api import (
 from fabric.contrib.files import upload_template
 from fabric.state import env
 
+from bookscrawler.settings import LOGGING_DIR
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,10 @@ def create_directories():
     sudo('mkdir -p {}'.format(PROJECT_DIR))
     sudo('chown -R {user}:{user} {dir}'.format(user=env.user,
                                                dir=PROJECT_DIR))
+    # Logging directory
+    sudo('mkdir -p {}'.format(LOGGING_DIR))
+    sudo('chown -R {user}:{user} {dir}'.format(user=env.user,
+                                               dir=LOGGING_DIR))
 
 
 def checkout_repository():
