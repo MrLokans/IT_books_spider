@@ -1,7 +1,7 @@
 Description
 -----------
 
-Web crawler of books bulletins in baraholka.onliner.by
+Web crawler of books bulletins in baraholka.onliner.by website.
 
 Running
 -------
@@ -19,3 +19,9 @@ export export SCRAPY_SEND_MAIL_TO=  # emails are sent TO the specified user
 # launch the spider
 scrapy runspider bookscrawler/spiders/onliner_spider.py
 ```
+
+Deployment
+----------
+Spider is deployed to the remote linux server via [Fabric](http://www.fabfile.org/), the only prerequisite is Python 3.5 and SSH daemon installed and running.
+
+In order to deploy the spider you should update config.ini e-mail settings, include your host address in env.hosts variable inside fabfile.py script and launch fab deploy. This will download the repository, install the vurtual environment and launch cron jobs.
