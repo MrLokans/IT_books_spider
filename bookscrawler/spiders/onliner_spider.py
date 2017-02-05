@@ -5,6 +5,15 @@ from scrapy.linkextractors import LinkExtractor
 # from scrapy.selector import Selector
 
 from bookscrawler.items import PostItem
+from bookscrawler.spiders.url_cache import (
+    URLFileCache,
+    URLStorageStrategy
+)
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__file__)
+
 
 BASE_URL = "http://baraholka.onliner.by"
 BOOK_FORUM = "viewforum.php?f=203"
@@ -25,6 +34,8 @@ PAGES_URLS = [
     for x in range(2, PAGES_COUNT)
 ]
 
+CACHE_FILE = 'visited_urls.pickle'
+
 
 def correct_encoding(s):
     if hasattr(s, "encode"):
@@ -39,7 +50,26 @@ class BookSpider(CrawlSpider):
 
     rules = [Rule(
         LinkExtractor(restrict_css="h2.wraptxt"),
-        callback='parse_topic_page', follow=True)]
+        callback='parse_topic_page', follow=True,
+        process_request='process_bulletin_link')]
+
+    def __init__(self, *args, **kwargs):
+        self.cache = URLFileCache(CACHE_FILE, URLStorageStrategy())
+        self.cache.load_cache()
+        super().__init__(*args, **kwargs)
+
+    def process_bulletin_link(self, request):
+        """
+        Here we check whether we've already visited
+        the provided URL
+        """
+        if self.cache.has_url(request.url):
+            return None
+        self.cache.add_url(request.url)
+        return request
+
+    def closed(self, reason):
+        self.cache.persist_cache()
 
     def parse_topic_page(self, response):
         post = PostItem()

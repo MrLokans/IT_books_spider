@@ -54,6 +54,7 @@ class URLFileCache(object):
         if not cache_exists or not cache_is_file:
             logger.info("Cache file does not exist.")
             return
+        logger.info("Reading cache file.")
         with open(self.storage_file, 'rb') as f:
             self.__url_set = pickle.load(f)
 
