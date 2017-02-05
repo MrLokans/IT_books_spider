@@ -6,9 +6,27 @@ middleware level
 """
 
 
+class URLStorageStrategy(object):
+    """
+    In order to optimize storage space we remove
+    redundant URL parts
+    """
+
+    def to_internal_format(self, url: str) -> str:
+        """
+        Transform the given URL into compact internal representation
+        """
+
+    def from_internal_format(self, shorten_url: str) -> str:
+        """
+        Reconstruct full URL from internal representation
+        """
+
+
 class URLFileCache(object):
     def __init__(self, storage_file: str):
         self.storage_file = storage_file
+        self.__url_set = set()
 
     def load_cache(self) -> None:
         """
