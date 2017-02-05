@@ -4,6 +4,7 @@ We can not use middleware because we yield requests
 in our spider and the request is not processed by
 middleware level
 """
+from bookscrawler.spiders.exceptions import IncorrectURL
 
 
 class URLStorageStrategy(object):
@@ -11,16 +12,22 @@ class URLStorageStrategy(object):
     In order to optimize storage space we remove
     redundant URL parts
     """
+    _COMMON_URL_PART = 'http://baraholka.onliner.by/viewtopic.php?t='
 
     def to_internal_format(self, url: str) -> str:
         """
         Transform the given URL into compact internal representation
         """
+        if self._COMMON_URL_PART not in url:
+            raise IncorrectURL('Incorrect URL: {}'
+                               .format(url))
+        return url[len(self._COMMON_URL_PART):]
 
     def from_internal_format(self, shorten_url: str) -> str:
         """
         Reconstruct full URL from internal representation
         """
+        return self._COMMON_URL_PART + shorten_url
 
 
 class URLFileCache(object):

@@ -1,6 +1,5 @@
 import pytest
 
-from bookscrawler.spiders.url_cache import URLStorageStrategy
 from bookscrawler.spiders.exceptions import IncorrectURL
 
 
@@ -8,7 +7,7 @@ def test_basic_url_strategy_compacts_url(url_strategy):
     expected = '19314820'
     bulletin_url = 'http://baraholka.onliner.by/viewtopic.php?t={}'\
         .format(expected)
-    assert url_strategy.from_internal_format(bulletin_url)
+    assert url_strategy.to_internal_format(bulletin_url) == expected
 
 
 def test_basic_url_strategy_raises_error_with_incorrect_url(url_strategy):
