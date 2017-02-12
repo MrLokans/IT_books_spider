@@ -1,5 +1,7 @@
 from urllib.parse import urljoin
 
+import requests
+from scrapy.selector import Selector
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 # from scrapy.selector import Selector
@@ -20,19 +22,8 @@ BOOK_FORUM = "viewforum.php?f=203"
 
 START_URL = urljoin(BASE_URL, BOOK_FORUM)
 PAGE_NUMBER_URL = START_URL + "&sk=created&start={}"
-PAGE_2_URL = START_URL + "&sk=created&start=50"
 
-# Here for simplicity sake only 20 pages are being parsed.
-# The better way is to obtain pagination widget and count the number
-# of total post pages.
-
-POSTS_PER_PAGE = 90
-
-PAGES_COUNT = 100
-PAGES_URLS = [
-    PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE)
-    for x in range(2, PAGES_COUNT)
-]
+POSTS_PER_PAGE = 50
 
 CACHE_FILE = 'visited_urls.pickle'
 
@@ -45,8 +36,6 @@ def correct_encoding(s):
 class BookSpider(CrawlSpider):
     name = "onlinerbooksspider"
     allowed_domains = ["baraholka.onliner.by"]
-    start_urls = [START_URL]
-    start_urls.extend(PAGES_URLS)
 
     rules = [Rule(
         LinkExtractor(restrict_css="h2.wraptxt"),
@@ -56,7 +45,21 @@ class BookSpider(CrawlSpider):
     def __init__(self, *args, **kwargs):
         self.cache = URLFileCache(CACHE_FILE, URLStorageStrategy())
         self.cache.load_cache()
+        self._calcultate_start_urls()
         super().__init__(*args, **kwargs)
+
+    def _calcultate_start_urls(self):
+        body = requests.get(START_URL).text
+        pages = Selector(text=body)\
+            .css('ul.pages-fastnav')\
+            .xpath('li//text()')\
+            .extract()[-1]
+        pages = int(pages)
+        pages_urls = [
+            PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE)
+            for x in range(1, pages)
+        ]
+        self.start_urls = pages_urls
 
     def process_bulletin_link(self, request):
         """
