@@ -86,24 +86,9 @@ class JsonWithEncodingPipeline(object):
 
 class BookFilterPipeline(object):
 
-    def __init__(self):
-        # Words that are filtered for
-        self.searched_keywords = ['python', 'javascript',
-                                  'программировани[еюя]', 'программируем',
-                                  'программист', 'arduino',
-                                  'c\+\+', 'нейронные сети', 'разработка',
-                                  'neural networks', 'machine learning',
-                                  'машинное обучение', 'data science',
-                                  'program', 'programming',
-                                  'искусственный интеллект',
-                                  'artificial intelligence',
-                                  'linux', 'статистика', 'селин', 'хеллер',
-                                  'стоккоу', 'гийота', 'git\s', 'devops',
-                                  'компьютерные сети', 'networks',
-                                  'angular(?:js)', 'react', 'схемотехника',
-                                  'алгоритм', 'algorithm', 'java'
-                                  ]
-        self.search_regex = re.compile(r"|".join(self.searched_keywords),
+    def open_spider(self, spider):
+        searched_keywords = spider.settings['SEARCHED_KEYWORDS']
+        self.search_regex = re.compile(r"|".join(searched_keywords),
                                        re.IGNORECASE)
 
     def appropriate_text(self, text):
