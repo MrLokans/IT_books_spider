@@ -1,6 +1,6 @@
-import os
+import configparser
 import logging
-import ConfigParser
+import os
 
 from fabric.api import (
     cd,
@@ -16,7 +16,7 @@ from bookscrawler.settings import LOGGING_DIR
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 
 REPOSITORY_URL = 'https://github.com/MrLokans/IT_books_spider'
 PROJECT_DIR = '/opt/IT_books_spider'
