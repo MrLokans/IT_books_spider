@@ -1,4 +1,4 @@
-Jinja2-2.9.6
+Jinja2==2.9.6
 mailer==0.8.1
 pandas==0.20.3
 requests==2.18.4
