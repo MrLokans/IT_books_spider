@@ -10,9 +10,6 @@ import os
 import pickle
 import re
 
-import pymongo
-
-from scrapy.exceptions import DropItem
 from scrapy.conf import settings
 
 import pandas as pd
@@ -69,33 +66,6 @@ class MailSender(object):
                    smtpuser=user,
                    smtppass=password,
                    smtpssl=settings['MAIL_SSL'])
-
-
-class MongoDBPipeline(object):
-
-    def __init__(self):
-        connection = pymongo.MongoClient(
-            settings['MONGODB_SERVER'],
-            settings['MONGODB_PORT']
-        )
-        db = connection[settings['MONGODB_DB']]
-        self.collection = db[settings['MONGODB_COLLECTION']]
-
-    def process_item(self, item, spider):
-        if item["title"] and item["author"] and item["content"]:
-            search_criteria = {
-                'title': item['title'],
-                'content': item['content'],
-                'author': item['content'],
-            }
-            mongo_item = self.collection.find_one(search_criteria)
-            if mongo_item:
-                raise DropItem("Item already present.")
-            else:
-                self.collection.insert(dict(item))
-                logger.msg("Question added to MongoDB database!",
-                           level=logging.DEBUG, spider=spider)
-        return item
 
 
 class JsonWithEncodingPipeline(object):

@@ -14,11 +14,6 @@ LOGGING_DIR = '/var/log/it-spider'
 LOG_FILE = os.path.join(LOGGING_DIR, 'scrapping.log')
 LOG_LEVEL = 'INFO'
 
-MONGODB_SERVER = "localhost"
-MONGODB_PORT = 27017
-MONGODB_DB = "onliner_books"
-MONGODB_COLLECTION = "books"
-
 
 MAIL_FROM = os.environ.get('SCRAPY_MAIL_USER')
 MAIL_HOST = 'smtp.yandex.ru'
