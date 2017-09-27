@@ -7,6 +7,7 @@ middleware level
 import logging
 import os
 import pickle
+import re
 
 
 from bookscrawler.spiders.exceptions import IncorrectURL
@@ -21,22 +22,27 @@ class URLStorageStrategy(object):
     In order to optimize storage space we remove
     redundant URL parts
     """
-    _COMMON_URL_PART = 'http://baraholka.onliner.by/viewtopic.php?t='
+
+    TOPIC_URL = 'https://baraholka.onliner.by/viewtopic.php\?t={}'
+
+    URL_REGEX = re.compile(
+        r'(http|https)://baraholka\.onliner\.by/viewtopic\.php\?t=(?P<topic_id>\d+)'
+    )
 
     def to_internal_format(self, url: str) -> str:
         """
         Transform the given URL into compact internal representation
         """
-        if self._COMMON_URL_PART not in url:
-            raise IncorrectURL('Incorrect URL: {}'
-                               .format(url))
-        return url[len(self._COMMON_URL_PART):]
+        match = self.URL_REGEX.match(url)
+        if not match:
+            raise IncorrectURL('Incorrect URL: {}'.format(url))
+        return match.groupdict()['topic_id']
 
-    def from_internal_format(self, shorten_url: str) -> str:
+    def from_internal_format(self, topic_id: str) -> str:
         """
         Reconstruct full URL from internal representation
         """
-        return self._COMMON_URL_PART + shorten_url
+        return self.TOPIC_URL + topic_id
 
 
 class URLFileCache(object):
