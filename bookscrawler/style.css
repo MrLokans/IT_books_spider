@@ -29,6 +29,13 @@
     right: 10px;
 }
 
+.created {
+    position: absolute;
+    top: 35px;
+    right: 10px;
+    font-size: 8px;
+}
+
 .link {
   font-size: 14px;
   text-decoration:none;

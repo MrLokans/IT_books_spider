@@ -202,7 +202,7 @@ class ReportPipeline(object):
         """
         template_context = {
             'report_date': 'today',
-            'books_table': items
+            'items_table': items
         }
         template = self._get_template()
         result_html = template.render(template_context)
