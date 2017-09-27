@@ -27,7 +27,10 @@ SEARCHED_KEYWORDS = ['python', 'javascript',
                      'компьютерные сети', 'networks',
                      'angular(?:js)', 'react', 'схемотехника',
                      'алгоритм', 'algorithm', 'java', 'комикс',
-                     'sandman', 'песочный человек', 'ноктюрны']
+                     'sandman', 'песочный человек', 'ноктюрны'
+                     'ps3', 'playstation 3', 'playstation3',
+                     'heavy rain', 'last of us', 'god of war',
+                     'killzone', 'little big planet']
 
 if os.path.exists('/var/log/it-spider'):
     LOGGING_DIR = '/var/log/it-spider'

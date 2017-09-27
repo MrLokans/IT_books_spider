@@ -1,1 +1,6 @@
 **/*.pyc
+*.pdf
+tox.ini
+.tox
+.cache
+*.pickle
