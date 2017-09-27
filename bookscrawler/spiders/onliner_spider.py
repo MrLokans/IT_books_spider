@@ -4,7 +4,6 @@ import requests
 from scrapy.selector import Selector
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-# from scrapy.selector import Selector
 
 from bookscrawler.items import PostItem
 from bookscrawler.spiders.url_cache import (
@@ -18,14 +17,19 @@ logger = logging.getLogger(__file__)
 
 
 BASE_URL = "http://baraholka.onliner.by"
-BOOK_FORUM = "viewforum.php?f=203"
-
-START_URL = urljoin(BASE_URL, BOOK_FORUM)
-PAGE_NUMBER_URL = START_URL + "&sk=created&start={}"
+BOOK_FORUM = "viewforum.php?f={}"
 
 POSTS_PER_PAGE = 50
 
 CACHE_FILE = 'visited_urls.pickle'
+
+
+def get_forum_url_from_id(forum_id):
+    return urljoin(BASE_URL, BOOK_FORUM.format(forum_id))
+
+
+def get_forum_page_url(url, page_number, posts_per_page=POSTS_PER_PAGE):
+    return url + "&sk=created&start={}".format(page_number * posts_per_page)
 
 
 def correct_encoding(s):
@@ -36,6 +40,12 @@ def correct_encoding(s):
 class BookSpider(CrawlSpider):
     name = "onlinerbooksspider"
     allowed_domains = ["baraholka.onliner.by"]
+
+    # TODO: read from the config
+    FORUM_IDS_TO_PARSE = (
+        191,  # PS3 games
+        203,  # Books
+    )
 
     rules = [Rule(
         LinkExtractor(restrict_css="h2.wraptxt"),
@@ -48,22 +58,28 @@ class BookSpider(CrawlSpider):
         self._calcultate_start_urls()
         super().__init__(*args, **kwargs)
 
-    def _calcultate_start_urls(self):
-        body = requests.get(START_URL).text
+    def _extract_number_of_pages_from_pagination(self, body):
         pages = Selector(text=body)\
             .css('ul.pages-fastnav')\
             .xpath('li//text()')\
             .extract()[-1]
-        pages = int(pages)
-        pages_urls = [
-            PAGE_NUMBER_URL.format(x * POSTS_PER_PAGE)
-            for x in range(1, pages)
-        ]
-        self.start_urls = pages_urls
+        return int(pages)
+
+    def _calcultate_start_urls(self):
+        self.start_urls = []
+        for forum_id in self.FORUM_IDS_TO_PARSE:
+            url = get_forum_url_from_id(forum_id)
+            body = requests.get(url).text
+            pages = self._extract_number_of_pages_from_pagination(body)
+            pages_urls = [
+                get_forum_page_url(url, i)
+                for i in range(1, pages)
+            ]
+            self.start_urls.extend(pages_urls)
 
     def process_bulletin_link(self, request):
         """
-        Here we check whether we've already visited
+        Check whether we've already visited
         the provided URL
         """
         if self.cache.has_url(request.url):
