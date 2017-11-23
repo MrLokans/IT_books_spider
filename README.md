@@ -14,7 +14,9 @@ pip install -r requirements.txt
 
 export SCRAPY_MAIL_USER= # emails are sent FROM the given user, gmail only supported for now
 export SCRAPY_MAIL_PASS=  # email password
-export export SCRAPY_SEND_MAIL_TO=  # emails are sent TO the specified user
+export SCRAPY_SEND_MAIL_TO=  # emails are sent TO the specified user
+export TELEGRAM_BOT_TOKEN=
+export TELEGRAM_BOT_CHAT_ID=
 
 # launch the spider
 scrapy runspider bookscrawler/spiders/onliner_spider.py

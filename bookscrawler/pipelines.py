@@ -12,8 +12,9 @@ import re
 
 from scrapy.conf import settings
 
-import pandas as pd
 from jinja2 import Environment, FileSystemLoader
+import pandas as pd
+import requests
 from weasyprint import HTML
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -66,6 +67,39 @@ class MailSender(object):
                    smtpuser=user,
                    smtppass=password,
                    smtpssl=settings['MAIL_SSL'])
+
+
+class TelegramSender(object):
+
+    _API_URL = 'https://api.telegram.org/bot{key}/sendMessage'
+    _MESSAGE_TEMPLATE = """
+    [{title}]({url})
+    *{price}*
+    """
+
+    def __init__(self, bot_token: str, chat_id: str):
+        self._token = bot_token
+        self._chat_id = chat_id
+
+    def _format_response(self, books: dict) -> str:
+        notes = ['*Book report: *']
+        for url, book_data in books.items():
+            notes.append(self._MESSAGE_TEMPLATE.format(
+                title=book_data['title'],
+                url=url,
+                price=book_data['price'],
+            ))
+        return ''.join(notes)
+
+    def send_report(self, items: dict):
+        params = {
+            'chat_id': self._chat_id,
+            'disable_web_page_preview': 1,
+            'text': self._format_response(items),
+            'parse_mode': 'markdown',
+        }
+        requests.get(self._API_URL.format(key=self._token),
+                     params=params)
 
 
 class JsonWithEncodingPipeline(object):
@@ -122,9 +156,14 @@ class ReportPipeline(object):
 
     def close_spider(self, spider):
         self.dump_cache(self.reported_links, self.URL_CACHE_FILE)
+        telegram_bot = TelegramSender(os.environ['TELEGRAM_BOT_TOKEN'],
+                                      os.environ['TELEGRAM_BOT_CHAT_ID'])
+        telegram_bot.send_report(self.to_be_reported)
         report_name = self.generate_report_name(report_type='pdf')
         self.generate_pdf_report(self.to_be_reported, report_name)
+
         self.email_report(report_name)
+        self.telegram_bot.send_report(self.to_be_reported)
 
     def _get_template_dir(self):
         return os.path.dirname(__file__)

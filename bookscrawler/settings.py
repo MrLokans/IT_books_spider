@@ -29,8 +29,7 @@ SEARCHED_KEYWORDS = ['python', 'javascript',
                      'алгоритм', 'algorithm', 'java', 'комикс',
                      'sandman', 'песочный человек', 'ноктюрны'
                      'ps3', 'playstation 3', 'playstation3',
-                     'heavy rain', 'last of us', 'god of war',
-                     'killzone', 'little big planet']
+                     'ultimate ninja storm', 'naruto', ]
 
 if os.path.exists('/var/log/it-spider'):
     LOGGING_DIR = '/var/log/it-spider'

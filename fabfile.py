@@ -75,8 +75,10 @@ def add_crontab_entry():
     username = config.get('credentials', 'email_username')
     password = config.get('credentials', 'email_password')
     recipient = config.get('credentials', 'recipient')
+    telegram_bot_token = config.get('credentials', 'telegram_bot_token')
+    telegram_bot_chat_id = config.get('credentials', 'telegram_bot_chat_id')
 
-    if not any([username, password, recipient]):
+    if not all([username, password, recipient, telegram_bot_token, telegram_bot_chat_id]):
         logger.error("Some of the settings is not set.")
         raise ValueError("Some of the settings is not set.")
 
@@ -85,6 +87,8 @@ def add_crontab_entry():
         'password': password,
         'username': username,
         'recipient': recipient,
+        'telegram_bot_token': telegram_bot_token,
+        'telegram_bot_chat_id': telegram_bot_chat_id,
         'spider_dir': PROJECT_DIR,
         'venv_activate': VIRTUALENV_ACTIVATE
     }
