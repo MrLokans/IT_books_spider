@@ -20,6 +20,7 @@ config = configparser.ConfigParser()
 
 REPOSITORY_URL = 'https://github.com/MrLokans/IT_books_spider'
 PROJECT_DIR = '/opt/IT_books_spider'
+LOGS_DIR = os.path.join(PROJECT_DIR, 'logs')
 VIRTUALENV_DIR = '/opt/it_books_venv'
 VIRTUALENV_PYTHON = os.path.join(VIRTUALENV_DIR, 'bin/python3')
 VIRTUALENV_PIP = os.path.join(VIRTUALENV_DIR, 'bin/pip')
@@ -41,6 +42,10 @@ def create_directories():
     sudo('mkdir -p {}'.format(LOGGING_DIR))
     sudo('chown -R {user}:{user} {dir}'.format(user=env.user,
                                                dir=LOGGING_DIR))
+    # Logging directory
+    sudo('mkdir -p {}'.format(LOGS_DIR))
+    sudo('chown -R {user}:{user} {dir}'.format(user=env.user,
+                                               dir=LOGS_DIR))
 
 
 def checkout_repository():
@@ -65,8 +70,8 @@ def create_virtualenv():
 def install_dependencies():
     logger.info("Installing depenencies")
     sudo('{pip} install -r {deps_file}'
-        .format(pip=VIRTUALENV_PIP,
-                deps_file=REQUIREMENTS_PATH))
+         .format(pip=VIRTUALENV_PIP,
+                 deps_file=REQUIREMENTS_PATH))
 
 
 def add_crontab_entry():
@@ -90,7 +95,8 @@ def add_crontab_entry():
         'telegram_bot_token': telegram_bot_token,
         'telegram_bot_chat_id': telegram_bot_chat_id,
         'spider_dir': PROJECT_DIR,
-        'venv_activate': VIRTUALENV_ACTIVATE
+        'venv_activate': VIRTUALENV_ACTIVATE,
+        'logs_dir': LOGS_DIR,
     }
     upload_template(CRONTAB_TEMPLATE_NAME, CRONTAB_FILE,
                     context=context,

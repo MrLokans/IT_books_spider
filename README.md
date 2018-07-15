@@ -24,6 +24,6 @@ scrapy runspider bookscrawler/spiders/onliner_spider.py
 
 Deployment
 ----------
-Spider is deployed to the remote linux server via [Fabric](http://www.fabfile.org/), only prerequisites are Python 3.5 and SSH client installed.
+Spider is deployed to the remote linux server via [Fabric](http://www.fabfile.org/), only prerequisites are Python 3.6 and SSH client installed.
 
 In order to deploy the spider you should update config.ini e-mail settings, include your host address in env.hosts variable inside fabfile.py script and launch ```fab deploy```. This will download the repository, install the vurtual environment and launch cron jobs.
