@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urljoin
 
 import requests
@@ -11,7 +12,6 @@ from bookscrawler.spiders.url_cache import (
     URLStorageStrategy
 )
 
-import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__file__)
 
@@ -41,22 +41,24 @@ class BookSpider(CrawlSpider):
     name = "onlinerbooksspider"
     allowed_domains = ["baraholka.onliner.by"]
 
-    # TODO: read from the config
-    FORUM_IDS_TO_PARSE = (
-        191,  # PS3 games
-        203,  # Books
-    )
-
     rules = [Rule(
         LinkExtractor(restrict_css="h2.wraptxt"),
         callback='parse_topic_page', follow=True,
         process_request='process_bulletin_link')]
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.cache = URLFileCache(CACHE_FILE, URLStorageStrategy())
         self.cache.load_cache()
-        self._calcultate_start_urls()
-        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super().from_crawler(crawler, *args, **kwargs)
+        spider._forum_ids = crawler.settings.getlist(
+            'FORUM_IDS', []
+        )
+        spider._calculate_start_urls()
+        return spider
 
     def _extract_number_of_pages_from_pagination(self, body):
         pages = Selector(text=body)\
@@ -65,9 +67,9 @@ class BookSpider(CrawlSpider):
             .extract()[-1]
         return int(pages)
 
-    def _calcultate_start_urls(self):
+    def _calculate_start_urls(self):
         self.start_urls = []
-        for forum_id in self.FORUM_IDS_TO_PARSE:
+        for forum_id in self._forum_ids:
             url = get_forum_url_from_id(forum_id)
             body = requests.get(url).text
             pages = self._extract_number_of_pages_from_pagination(body)

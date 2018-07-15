@@ -163,7 +163,6 @@ class ReportPipeline(object):
         self.generate_pdf_report(self.to_be_reported, report_name)
 
         self.email_report(report_name)
-        self.telegram_bot.send_report(self.to_be_reported)
 
     def _get_template_dir(self):
         return os.path.dirname(__file__)
