@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export SCRAPY_MAIL_PASS={{password}}
 export SCRAPY_MAIL_USER={{username}}
