@@ -2,20 +2,23 @@
 # https://stackoverflow.com/questions/9181214/scrapy-text-encoding
 
 import datetime
+import itertools
 import json
 import io
 import logging
+from typing import Optional
+
 import mailer
 import os
 import pickle
 import re
 
-from scrapy.conf import settings
-
 from jinja2 import Environment, FileSystemLoader
 import pandas as pd
 import requests
 from weasyprint import HTML
+
+from bookscrawler.parse_config import StaticConfig
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSS_PATH = os.path.join(BASE_DIR, 'style.css')
@@ -120,8 +123,12 @@ class JsonWithEncodingPipeline(object):
 
 class BookFilterPipeline(object):
 
+    def __init__(self):
+        self.filter_backend = StaticConfig()
+
     def open_spider(self, spider):
-        searched_keywords = spider.settings['SEARCHED_KEYWORDS']
+        config_data = self.filter_backend.get_config()
+        searched_keywords = set(itertools.chain.from_iterable(config_data.values()))
         self.search_regex = re.compile(r"|".join(searched_keywords),
                                        re.IGNORECASE)
 
@@ -147,12 +154,13 @@ class ReportPipeline(object):
         self.reported_links = {}
         self._template_dir = self._get_template_dir()
         self.env = Environment(loader=FileSystemLoader(self._template_dir))
-        self.mailer = MailSender.from_settings(settings)
+        self.mailer: Optional[MailSender] = None
         self.send_to = os.environ['SCRAPY_SEND_MAIL_TO']
         self.to_be_reported = {}
 
     def open_spider(self, spider):
         self.reported_links = self.read_url_cache(self.URL_CACHE_FILE)
+        self.mailer = MailSender.from_settings(spider.settings)
 
     def close_spider(self, spider):
         self.dump_cache(self.reported_links, self.URL_CACHE_FILE)

@@ -7,6 +7,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 from bookscrawler.items import PostItem
+from bookscrawler.parse_config import StaticConfig
 from bookscrawler.spiders.url_cache import (
     URLFileCache,
     URLStorageStrategy
@@ -54,10 +55,8 @@ class BookSpider(CrawlSpider):
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super().from_crawler(crawler, *args, **kwargs)
-        spider._forum_ids = crawler.settings.getlist(
-            'FORUM_IDS', []
-        )
-        spider._calculate_start_urls()
+        url_config = StaticConfig()
+        spider._calculate_start_urls(url_config.get_config().keys())
         return spider
 
     def _extract_number_of_pages_from_pagination(self, body):
@@ -67,9 +66,9 @@ class BookSpider(CrawlSpider):
             .extract()[-1]
         return int(pages)
 
-    def _calculate_start_urls(self):
+    def _calculate_start_urls(self, forum_ids):
         self.start_urls = []
-        for forum_id in self._forum_ids:
+        for forum_id in forum_ids:
             url = get_forum_url_from_id(forum_id)
             body = requests.get(url).text
             pages = self._extract_number_of_pages_from_pagination(body)

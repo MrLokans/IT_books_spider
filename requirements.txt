@@ -1,6 +1,0 @@
-Jinja2==2.10
-mailer==0.8.1
-pandas==0.20.3
-requests==2.19.1
-Scrapy==1.5.1
-WeasyPrint==0.42.3
