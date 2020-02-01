@@ -17,13 +17,15 @@ CONFIG_FILE = os.path.abspath('config.ini')
 CRONTAB_TEMPLATE = """\
 #!/bin/bash
 
+sudo -i -u {user} bash << EOF
 export SCRAPY_MAIL_PASS={password}
 export SCRAPY_MAIL_USER={username}
 export SCRAPY_SEND_MAIL_TO={recipient}
 export TELEGRAM_BOT_TOKEN={telegram_bot_token}
 export TELEGRAM_BOT_CHAT_ID={telegram_bot_chat_id}
-cd {spider_dir} && poetry run scrapy runspider bookscrawler/spiders/onliner_spider.py >> {logs_dir}/bookscrawler.log
-
+source /home/mrlokans/.poetry/env
+cd {spider_dir} && touch {logs_dir}/bookscrawler.run && poetry run scrapy runspider bookscrawler/spiders/onliner_spider.py >> {logs_dir}/bookscrawler.log 2>&1
+EOF
 """
 CRONTAB_FILE = os.path.join('/etc/cron.daily', 'it-spider')
 
@@ -51,7 +53,8 @@ def checkout_repository(conn):
             logger.info("Repository is already cloned. "
                         "Checkout will be attempted "
                         "together with pulling.")
-            conn.run('git reset --hard HEAD')
+            conn.run('git fetch --all')
+            conn.run('git reset --hard origin/master')
             conn.run('git pull')
 
 
@@ -87,6 +90,7 @@ def add_crontab_entry(conn):
         'telegram_bot_chat_id': telegram_bot_chat_id,
         'spider_dir': PROJECT_DIR,
         'logs_dir': LOGS_DIR,
+        'user': conn.user,
     }
     crontab_contents = CRONTAB_TEMPLATE.format(**context)
     with open('/tmp/fab-crontab', 'w') as temp_f:
