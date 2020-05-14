@@ -2,6 +2,7 @@
 # https://stackoverflow.com/questions/9181214/scrapy-text-encoding
 
 import datetime
+import enum
 import itertools
 import json
 import io
@@ -18,13 +19,20 @@ import pandas as pd
 import requests
 from weasyprint import HTML
 
-from bookscrawler.parse_config import StaticConfig
+from bookscrawler.parse_config import config_factory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSS_PATH = os.path.join(BASE_DIR, 'style.css')
 
 
 logger = logging.getLogger()
+
+
+@enum.unique
+class SpiderEventKind(enum.IntEnum):
+    SPIDER_STARTED = 0
+    SPIDER_FINISHED = 1
+
 
 
 class MailSender(object):
@@ -124,7 +132,7 @@ class JsonWithEncodingPipeline(object):
 class BookFilterPipeline(object):
 
     def __init__(self):
-        self.filter_backend = StaticConfig()
+        self.filter_backend = config_factory()
 
     def open_spider(self, spider):
         config_data = self.filter_backend.get_config()
@@ -143,6 +151,41 @@ class BookFilterPipeline(object):
             logger.debug("Match found: {}".format(match.group()))
             item['tags'] = [match.group()]
             return item
+
+
+class EventSenderPipeline:
+
+    API_URL = 'https://mrlokans.com/api/spiders/events'
+
+    def __init__(self):
+        self.session = requests.Session()
+        self.processed_items = 0
+
+    def _send_event(self, event_kind: int, event_body: dict = None):
+        event_body = event_body or {}
+        try:
+            self.session.post(self.API_URL, json={
+                "event_kind": event_kind,
+                "event_data": event_body,
+                "associated_spider": "onlinerbooksspider"
+            }, timeout=1.0)
+        except requests.exceptions.RequestException:
+            logger.info("Error sending events data to the API.")
+
+    def open_spider(self, _):
+        self._send_event(SpiderEventKind.SPIDER_STARTED)
+
+    def process_item(self, item, spider):
+        self.processed_items += 1
+        return item
+
+    def close_spider(self, _):
+        self._send_event(
+            SpiderEventKind.SPIDER_FINISHED,
+            {
+                "reported_items": self.processed_items,
+            }
+        )
 
 
 class ReportPipeline(object):

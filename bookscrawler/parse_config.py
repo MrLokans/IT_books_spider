@@ -52,7 +52,7 @@ class StaticConfig:
 
 
 class WebSiteBased:
-    url_endpoint = 'https://mrlokans.com/api/v1/parse-items/'
+    url_endpoint = 'https://https://mrlokans.com/api/spiders/onlinerbooksspider/config'
     connection_timeout = 2  # seconds
 
     def can_use(self) -> bool:
@@ -62,7 +62,17 @@ class WebSiteBased:
         except Exception:
             return False
 
-    def get_config(self):
-        return {
+    def get_config(self) -> Mapping[int, List[str]]:
+        config = {}
+        data = requests.get(self.url_endpoint, timeout=self.connection_timeout).json()
+        search_criteria = data.get('search_criteria', [])
+        for criteria in search_criteria:
+            config.update(criteria)
+        return config
 
-        }
+
+def config_factory():
+    for config in (WebSiteBased(), StaticConfig()):
+        if config.can_use():
+            return config
+    raise ValueError("No config to use.")

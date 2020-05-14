@@ -7,6 +7,7 @@ NEWSPIDER_MODULE = 'bookscrawler.spiders'
 
 ITEM_PIPELINES = {'bookscrawler.pipelines.BookFilterPipeline': 100,
                   'bookscrawler.pipelines.ReportPipeline': 150,
+                  'bookscrawler.pipelines.EventSenderPipeline': 200,
                   }
 
 

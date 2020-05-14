@@ -7,7 +7,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 from bookscrawler.items import PostItem
-from bookscrawler.parse_config import StaticConfig
+from bookscrawler.parse_config import config_factory
 from bookscrawler.spiders.url_cache import (
     URLFileCache,
     URLStorageStrategy
@@ -55,7 +55,7 @@ class BookSpider(CrawlSpider):
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super().from_crawler(crawler, *args, **kwargs)
-        url_config = StaticConfig()
+        url_config = config_factory()
         spider._calculate_start_urls(url_config.get_config().keys())
         return spider
 
